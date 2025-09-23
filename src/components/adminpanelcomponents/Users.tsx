@@ -209,7 +209,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -239,18 +239,36 @@ type User = {
 
 type FormMode = "view" | "create";
 
-export default function Users() {
-  const [users, setUsers] = useState<User[]>([
-    { id: "1", name: "John Doe", email: "john@example.com" },
-    { id: "2", name: "Jane Smith", email: "jane@example.com" },
-    { id: "3", name: "Robert Johnson", email: "robert@example.com" },
-  ]);
+const API_BASE_URL = "https://ikaaya-realty-backend.onrender.com/users";
 
+export default function Users() {
+  const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // Fetch all users on load
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(API_BASE_URL);
+        const result = await res.json();
+
+        if (result.success) {
+          setUsers(result.data);
+        } else {
+          console.error(result.message);
+        }
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Filtered list
   const filteredUsers = users.filter(
     (user) =>
       user.id.includes(filter) ||
@@ -258,30 +276,63 @@ export default function Users() {
       user.email.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const openForm = (mode: FormMode, user?: User) => {
+  // Open form (create or view)
+  const openForm = async (mode: FormMode, user?: User) => {
     setFormMode(mode);
-    setSelectedUser(user || null);
+
+    if (mode === "view" && user) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/${user.id}`);
+        const result = await res.json();
+
+        if (result.success) {
+          setSelectedUser(result.data);
+        } else {
+          console.error(result.message);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user", err);
+      }
+    } else {
+      setSelectedUser(null);
+    }
+
     setSheetOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Handle create user
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    // ID is not entered by user when creating, generate simple unique ID here
-    // For demo, we use timestamp string as ID
-    const id = formMode === "create" ? Date.now().toString() : (formData.get("id") as string);
+
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
 
-    if (formMode === "create") {
-      setUsers((prev) => [...prev, { id, name, email }]);
+    try {
+      const res = await fetch(API_BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        setUsers((prev) => [...prev, result.data]);
+      } else {
+        console.error(result.message);
+      }
+    } catch (err) {
+      console.error("Failed to create user", err);
     }
+
     setSheetOpen(false);
     setSelectedUser(null);
   };
 
   return (
     <div>
+      {/* Top bar with search + create */}
       <div className="flex justify-between mb-6">
         <Input
           placeholder="Filter users by ID, name, or email"
@@ -292,6 +343,7 @@ export default function Users() {
         <Button onClick={() => openForm("create")}>Create User</Button>
       </div>
 
+      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -333,11 +385,13 @@ export default function Users() {
         </Table>
       </Card>
 
-      {/* Sheet Drawer for User Form */}
+      {/* Sheet Drawer */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] p-6">
           <SheetHeader>
-            <SheetTitle>{formMode === "view" ? "View User" : "Create User"}</SheetTitle>
+            <SheetTitle>
+              {formMode === "view" ? "View User" : "Create User"}
+            </SheetTitle>
             <SheetDescription>
               {formMode === "view"
                 ? "User information (read-only)"
@@ -349,7 +403,13 @@ export default function Users() {
             {formMode === "view" && selectedUser && (
               <div>
                 <Label htmlFor="id">ID</Label>
-                <Input id="id" name="id" value={selectedUser.id} disabled readOnly />
+                <Input
+                  id="id"
+                  name="id"
+                  value={selectedUser.id}
+                  disabled
+                  readOnly
+                />
               </div>
             )}
 
