@@ -419,7 +419,7 @@ export default function Inquiries() {
     null
   );
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty-backend.onrender.com/residential-properties';
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty-backend.onrender.com';
 
   // Fetch inquiries from API
   const fetchInquiries = async () => {

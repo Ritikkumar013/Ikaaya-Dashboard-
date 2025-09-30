@@ -196,7 +196,7 @@ export default function ContactFormInquiries() {
   );
 
   const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "https://ikaaya-realty-backend.onrender.com/residential-properties";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://ikaaya-realty-backend.onrender.com";
 
   // Fetch inquiries from API
   const fetchInquiries = async () => {

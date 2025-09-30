@@ -325,15 +325,15 @@ export default function Amenities() {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty-backend.onrender.com/residential-properties';
-
+// const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty-backend.onrender.com/residential-properties';
+const API_BASE_URL = "https://ikaaya-realty-backend.onrender.com";
   // Fetch amenities from API
   const fetchAmenities = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`${backendUrl}/amenities`, {
+      const response = await fetch(`${API_BASE_URL}/amenities`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -374,7 +374,7 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty
   // Create amenity API call
   const createAmenity = async (title: string) => {
     try {
-      const response = await fetch(`${backendUrl}/amenities`, {
+      const response = await fetch(`${API_BASE_URL}/amenities`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -412,7 +412,7 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ikaaya-realty
   // Update amenity API call
   const updateAmenity = async (id: string, title: string) => {
     try {
-      const response = await fetch(`${backendUrl}/amenities/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/amenities/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
