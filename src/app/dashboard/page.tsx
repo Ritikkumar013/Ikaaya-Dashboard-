@@ -21,7 +21,7 @@ import Amenities from "@/components/adminpanelcomponents/Amenities";
 import PropertyInquiries from "@/components/adminpanelcomponents/PropertyInquiries";
 import DashboardHeader from "@/components/adminpanelcomponents/DashboardHeader";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
+// import { signOut } from "firebase/auth";
 import CommercialProperties from "@/components/adminpanelcomponents/CommercialProperties";
 import ContactFormInquiries from "@/components/adminpanelcomponents/ContactFormInquiries";
 
@@ -44,7 +44,7 @@ const sidebarItems: SidebarItem[] = [
 ];
 
 export default function Dashboard() {
-  const router = useRouter();
+  // const router = useRouter();
   const [active, setActive] = useState("profile");
   const [collapsed, setCollapsed] = useState(false);
 

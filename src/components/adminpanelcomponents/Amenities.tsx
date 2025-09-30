@@ -307,6 +307,11 @@ type Amenity = {
   name: string;
 };
 
+interface SourceData {
+  id: number;
+  title?: string;
+  Title?: string;
+}
 type FormMode = "view" | "edit" | "create";
 
 export default function Amenities() {
@@ -345,10 +350,10 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000
       console.log("API Response:", data); // Debug log
       
       // Transform the API response to match our component's expected structure
-      const transformedAmenities: Amenity[] = data.map((item: any) => ({
-        id: item.id,
-        name: item.title || item.Title // Handle both 'title' and 'Title' fields
-      }));
+      const transformedAmenities: Amenity[] = data.map((item: SourceData) => ({
+  id: item.id,
+  name: item.title ?? item.Title ?? ''
+}));
       
       setAmenities(transformedAmenities);
     } catch (err) {

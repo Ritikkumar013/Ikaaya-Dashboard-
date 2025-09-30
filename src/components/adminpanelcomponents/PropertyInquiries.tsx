@@ -401,7 +401,14 @@ type InquiryType = {
   message: string;
   createdAt: string;
 };
-
+interface APIInquiryResponse {
+  id: string;
+  username: string;
+  propertyName: string;
+  mobileNumber: string | number;
+  message: string;
+  createdAt: string;
+}
 export default function Inquiries() {
   const [inquiries, setInquiries] = useState<InquiryType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -437,17 +444,16 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000
       console.log("Inquiries API Response:", data);
 
       // Transform the API response to match our component's expected structure
-      const transformedInquiries: InquiryType[] = data.map((item: any) => ({
-        id: item.id,
-        userName: item.username,
-        propertyName: item.propertyName,
-        mobileNumber:
-          typeof item.mobileNumber === "number"
-            ? item.mobileNumber.toString()
-            : item.mobileNumber,
-        message: item.message,
-        createdAt: item.createdAt,
-      }));
+    const transformedInquiries: InquiryType[] = data.map((item: APIInquiryResponse) => ({
+  id: item.id,
+  userName: item.username,
+  propertyName: item.propertyName,
+  mobileNumber: typeof item.mobileNumber === "number"
+    ? item.mobileNumber.toString()
+    : item.mobileNumber,
+  message: item.message,
+  createdAt: item.createdAt,
+}));
 
       setInquiries(transformedInquiries);
     } catch (err) {

@@ -175,6 +175,15 @@ type InquiryType = {
   message: string;
   createdAt: string;
 };
+interface APIInquiryResponse {
+  id: string;
+  userName?: string;
+  username?: string;
+  userEmail: string;
+  phoneNumber: string | number;
+  message: string;
+  createdAt: string;
+}
 
 export default function ContactFormInquiries() {
   const [inquiries, setInquiries] = useState<InquiryType[]>([]);
@@ -211,18 +220,16 @@ export default function ContactFormInquiries() {
       console.log("Contact Inquiries API Response:", data);
 
       // Transform the API response to match our component's expected structure
-      const transformedInquiries: InquiryType[] = data.map((item: any) => ({
-        id: item.id,
-        userName: item.userName || item.username, // Handle both userName and username fields
-        email: item.userEmail,
-        mobileNumber:
-          typeof item.phoneNumber === "number"
-            ? item.phoneNumber.toString()
-            : item.phoneNumber,
-        message: item.message,
-        createdAt: item.createdAt,
-      }));
-
+     const transformedInquiries: InquiryType[] = data.map((item: APIInquiryResponse) => ({
+  id: item.id,
+  userName: item.userName ?? item.username ?? '', // Use nullish coalescing
+  email: item.userEmail,
+  mobileNumber: typeof item.phoneNumber === "number"
+    ? item.phoneNumber.toString()
+    : item.phoneNumber,
+  message: item.message,
+  createdAt: item.createdAt,
+}));
       setInquiries(transformedInquiries);
     } catch (err) {
       console.error("Error fetching contact inquiries:", err);
