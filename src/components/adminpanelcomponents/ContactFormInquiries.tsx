@@ -195,7 +195,8 @@ export default function ContactFormInquiries() {
     null
   );
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://ikaaya-realty-backend.onrender.com/residential-properties";
 
   // Fetch inquiries from API
   const fetchInquiries = async () => {
@@ -220,16 +221,19 @@ export default function ContactFormInquiries() {
       console.log("Contact Inquiries API Response:", data);
 
       // Transform the API response to match our component's expected structure
-     const transformedInquiries: InquiryType[] = data.map((item: APIInquiryResponse) => ({
-  id: item.id,
-  userName: item.userName ?? item.username ?? '', // Use nullish coalescing
-  email: item.userEmail,
-  mobileNumber: typeof item.phoneNumber === "number"
-    ? item.phoneNumber.toString()
-    : item.phoneNumber,
-  message: item.message,
-  createdAt: item.createdAt,
-}));
+      const transformedInquiries: InquiryType[] = data.map(
+        (item: APIInquiryResponse) => ({
+          id: item.id,
+          userName: item.userName ?? item.username ?? "", // Use nullish coalescing
+          email: item.userEmail,
+          mobileNumber:
+            typeof item.phoneNumber === "number"
+              ? item.phoneNumber.toString()
+              : item.phoneNumber,
+          message: item.message,
+          createdAt: item.createdAt,
+        })
+      );
       setInquiries(transformedInquiries);
     } catch (err) {
       console.error("Error fetching contact inquiries:", err);
