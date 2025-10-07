@@ -54,46 +54,44 @@
 
 // type FormMode = "view" | "update" | "create";
 
-// export default function ResidentialProperties() {
-//   // Dummy data for demo
-//   const [properties, setProperties] = useState<Property[]>([
-//     {
-//       id: "HYLxEuyL1CYMlitm5kNV",
-//       title: "Modern & Super Luxury Apartment",
-//       description: "Spacious apartment in city center",
-//       locationArea: "Midtown",
-//       address: "456 Elm St",
-//       propertyType: "Apartment",
-//       numberOfBedrooms: 3,
-//       numberOfBathrooms: 2,
-//       numberOfBalconies: 1,
-//       carpetArea: 1200,
-//       plotArea: 0,
-//       plotDimensions: "",
-//       widthFacingRoad: 30,
-//       facing: "East",
-//       totalFloors: 10,
-//       status: "Ready to move",
-//       ageOfProperty: 2,
-//       totalPrice: 8500000,
-//       pricePerUnit: 7000,
-//       otherRooms: "Study",
-//       furnishing: "semi-furnished",
-//       parking: "Available",
-//       amenities: "Gym, Pool, Security",
-//       locationAdvantage: "Near subway",
-//       rentalIncome: 20000,
-//       createdAt: "2025-09-06T07:58:21.392Z",
-//     },
-//   ]);
+// const API_BASE_URL = "https://ikaaya-realty-backend.onrender.com/residential-properties";
 
-//   const [loading] = useState(false);
+// export default function ResidentialProperties() {
+//   const [properties, setProperties] = useState<Property[]>([]);
+//   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState<string | null>(null);
 
 //   const [filter, setFilter] = useState("");
 //   const [sheetOpen, setSheetOpen] = useState(false);
 //   const [formMode, setFormMode] = useState<FormMode>("create");
 //   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+//   // Fetch properties from the API
+//   const fetchProperties = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await fetch(API_BASE_URL);
+//       if (!response.ok) {
+//         throw new Error("Failed to fetch properties.");
+//       }
+//       const data = await response.json();
+//       setProperties(data);
+//     } catch (err) {
+//       if (err instanceof Error) {
+//         setError(err.message);
+//       } else {
+//         setError("An unknown error occurred.");
+//       }
+//       toast.error("Failed to fetch properties.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchProperties();
+//   }, []);
 
 //   useEffect(() => {
 //     if (formMode === "create") {
@@ -117,16 +115,14 @@
 //     setSheetOpen(true);
 //   };
 
-//   // Handler for form submit updating local state
-//   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+//   // Handler for form submit (Create/Update)
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 //     e.preventDefault();
-//     if (!selectedProperty && formMode === "update") return;
+
+//     if (formMode === "update" && !selectedProperty) return;
 
 //     const formData = new FormData(e.currentTarget);
-
-//     // Parse all fields carefully
-//     const updatedProperty: Property = {
-//       id: selectedProperty ? selectedProperty.id : `id_${Date.now()}`,
+//     const payload: Omit<Property, "id" | "createdAt"> = {
 //       title: (formData.get("title") as string).trim(),
 //       description: (formData.get("description") as string).trim(),
 //       locationArea: (formData.get("locationArea") as string).trim(),
@@ -151,29 +147,54 @@
 //       amenities: (formData.get("amenities") as string).trim(),
 //       locationAdvantage: (formData.get("locationAdvantage") as string).trim(),
 //       rentalIncome: Number(formData.get("rentalIncome")),
-//       createdAt: selectedProperty?.createdAt || new Date().toISOString(),
 //     };
 
-//     if (formMode === "update" && selectedProperty) {
-//       setProperties((prev) =>
-//         prev.map((p) => (p.id === selectedProperty.id ? updatedProperty : p))
-//       );
-//       toast.success("Property updated successfully");
-//     } else if (formMode === "create") {
-//       setProperties((prev) => [...prev, updatedProperty]);
-//       toast.success("Property created successfully");
+//     try {
+//       if (formMode === "update" && selectedProperty) {
+//         const response = await fetch(`${API_BASE_URL}/${selectedProperty.id}`, {
+//           method: "PUT",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify(payload),
+//         });
+//         if (!response.ok) throw new Error("Failed to update property.");
+//         toast.success("Property updated successfully!");
+//       } else if (formMode === "create") {
+//         const response = await fetch(API_BASE_URL, {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify(payload),
+//         });
+//         if (!response.ok) throw new Error("Failed to create property.");
+//         toast.success("Property created successfully!");
+//       }
+//       fetchProperties();
+//       setSheetOpen(false);
+//     } catch (err) {
+//       if (err instanceof Error) {
+//         toast.error(err.message);
+//       } else {
+//         toast.error("An unknown error occurred.");
+//       }
 //     }
-
-//     setSheetOpen(false);
-//     setSelectedProperty(null);
-//     setFormMode("create");
 //   };
 
 //   // Delete property with confirmation
-//   const handleDelete = (id: string) => {
+//   const handleDelete = async (id: string) => {
 //     if (!confirm("Are you sure you want to delete this property?")) return;
-//     setProperties((prev) => prev.filter((p) => p.id !== id));
-//     toast.success("Property deleted successfully");
+//     try {
+//       const response = await fetch(`${API_BASE_URL}/${id}`, {
+//         method: "DELETE",
+//       });
+//       if (!response.ok) throw new Error("Failed to delete property.");
+//       toast.success("Property deleted successfully!");
+//       fetchProperties();
+//     } catch (err) {
+//       if (err instanceof Error) {
+//         toast.error(err.message);
+//       } else {
+//         toast.error("An unknown error occurred.");
+//       }
+//     }
 //   };
 
 //   if (loading) return <p>Loading properties...</p>;
@@ -578,6 +599,13 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
@@ -588,7 +616,7 @@ type Property = {
   locationArea: string;
   address: string;
   propertyType: string;
-  numberOfBedrooms: number;
+  numberOfBedrooms: string;
   numberOfBathrooms: number;
   numberOfBalconies: number;
   carpetArea: number;
@@ -596,9 +624,9 @@ type Property = {
   plotDimensions: string;
   widthFacingRoad: number;
   facing: string;
-  totalFloors: number;
+  totalFloors: string;
   status: string;
-  ageOfProperty: number;
+  ageOfProperty: string;
   totalPrice: number;
   pricePerUnit: number;
   otherRooms: string;
@@ -623,6 +651,15 @@ export default function ResidentialProperties() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+  // State for select fields
+  const [formData, setFormData] = useState({
+    propertyType: "",
+    facing: "",
+    status: "",
+    furnishing: "",
+    parking: "",
+  });
 
   // Fetch properties from the API
   const fetchProperties = async () => {
@@ -654,8 +691,23 @@ export default function ResidentialProperties() {
   useEffect(() => {
     if (formMode === "create") {
       setSelectedProperty(null);
+      setFormData({
+        propertyType: "",
+        facing: "",
+        status: "",
+        furnishing: "",
+        parking: "",
+      });
+    } else if (selectedProperty) {
+      setFormData({
+        propertyType: selectedProperty.propertyType,
+        facing: selectedProperty.facing,
+        status: selectedProperty.status,
+        furnishing: selectedProperty.furnishing,
+        parking: selectedProperty.parking,
+      });
     }
-  }, [formMode]);
+  }, [formMode, selectedProperty]);
 
   // Filter properties for table list
   const filteredProperties = properties.filter(
@@ -679,33 +731,34 @@ export default function ResidentialProperties() {
 
     if (formMode === "update" && !selectedProperty) return;
 
-    const formData = new FormData(e.currentTarget);
+    const formDataObj = new FormData(e.currentTarget);
     const payload: Omit<Property, "id" | "createdAt"> = {
-      title: (formData.get("title") as string).trim(),
-      description: (formData.get("description") as string).trim(),
-      locationArea: (formData.get("locationArea") as string).trim(),
-      address: (formData.get("address") as string).trim(),
-      propertyType: (formData.get("propertyType") as string).trim(),
-      numberOfBedrooms: Number(formData.get("numberOfBedrooms")),
-      numberOfBathrooms: Number(formData.get("numberOfBathrooms")),
-      numberOfBalconies: Number(formData.get("numberOfBalconies")),
-      carpetArea: Number(formData.get("carpetArea")),
-      plotArea: Number(formData.get("plotArea")),
-      plotDimensions: (formData.get("plotDimensions") as string).trim(),
-      widthFacingRoad: Number(formData.get("widthFacingRoad")),
-      facing: (formData.get("facing") as string).trim(),
-      totalFloors: Number(formData.get("totalFloors")),
-      status: (formData.get("status") as string).trim(),
-      ageOfProperty: Number(formData.get("ageOfProperty")),
-      totalPrice: Number(formData.get("totalPrice")),
-      pricePerUnit: Number(formData.get("pricePerUnit")),
-      otherRooms: (formData.get("otherRooms") as string).trim(),
-      furnishing: (formData.get("furnishing") as string).trim(),
-      parking: (formData.get("parking") as string).trim(),
-      amenities: (formData.get("amenities") as string).trim(),
-      locationAdvantage: (formData.get("locationAdvantage") as string).trim(),
-      rentalIncome: Number(formData.get("rentalIncome")),
-    };
+  title: (formDataObj.get("title") as string || "").trim(),
+  description: (formDataObj.get("description") as string || "").trim(),
+  locationArea: (formDataObj.get("locationArea") as string || "").trim(),
+  address: (formDataObj.get("address") as string || "").trim(),
+  propertyType: formData.propertyType,
+  numberOfBedrooms: (formDataObj.get("numberOfBedrooms") as string || "").trim(),
+  numberOfBathrooms: Number(formDataObj.get("numberOfBathrooms")) || 0,
+  numberOfBalconies: Number(formDataObj.get("numberOfBalconies")) || 0,
+  carpetArea: Number(formDataObj.get("carpetArea")) || 0,
+  plotArea: Number(formDataObj.get("plotArea")) || 0,
+  plotDimensions: (formDataObj.get("plotDimensions") as string || "").trim(),
+  widthFacingRoad: Number(formDataObj.get("widthFacingRoad")) || 0,
+  facing: formData.facing,
+  totalFloors: (formDataObj.get("totalFloors") as string || "").trim(),
+  status: formData.status,
+  ageOfProperty: (formDataObj.get("ageOfProperty") as string || "").trim(),
+  totalPrice: Number(formDataObj.get("totalPrice")) || 0,
+  pricePerUnit: Number(formDataObj.get("pricePerUnit")) || 0,
+  otherRooms: (formDataObj.get("otherRooms") as string || "").trim(),
+  furnishing: formData.furnishing,
+  parking: formData.parking,
+  amenities: (formDataObj.get("amenities") as string || "").trim(),
+  locationAdvantage: (formDataObj.get("locationAdvantage") as string || "").trim(),
+  rentalIncome: Number(formDataObj.get("rentalIncome")) || 0,
+};
+
 
     try {
       if (formMode === "update" && selectedProperty) {
@@ -789,7 +842,7 @@ export default function ResidentialProperties() {
                   <TableCell className="truncate max-w-[160px]">{property.id}</TableCell>
                   <TableCell>{property.title}</TableCell>
                   <TableCell>{property.locationArea}</TableCell>
-                  <TableCell>{property.totalPrice.toLocaleString()}</TableCell>
+                 <TableCell>{property.totalPrice?.toLocaleString()}</TableCell>
                   <TableCell>{property.propertyType}</TableCell>
                   <TableCell>
                     <div className="flex justify-center space-x-2">
@@ -819,7 +872,7 @@ export default function ResidentialProperties() {
 
       {/* Property Form Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-full max-w-3xl p-6">
+        <SheetContent side="right" className="w-full max-w-3xl p-6 overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               {formMode === "view"
@@ -835,15 +888,15 @@ export default function ResidentialProperties() {
             </SheetDescription>
           </SheetHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto max-h-[80vh]">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
             {formMode !== "create" && (
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="id">ID</Label>
                 <Input id="id" name="id" value={selectedProperty?.id || ""} disabled readOnly />
               </div>
             )}
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
@@ -854,7 +907,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
@@ -865,7 +918,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="locationArea">Location Area</Label>
               <Input
                 id="locationArea"
@@ -876,7 +929,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
@@ -887,31 +940,41 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="propertyType">Property Type</Label>
-              <Input
-                id="propertyType"
-                name="propertyType"
-                defaultValue={selectedProperty?.propertyType || ""}
+              <Select
+                value={formData.propertyType}
+                onValueChange={(value) => setFormData({ ...formData, propertyType: value })}
                 disabled={formMode === "view"}
-                required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select property type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Apartment">Apartment</SelectItem>
+                  <SelectItem value="Villa">Villa</SelectItem>
+                  <SelectItem value="Independent House">Independent House</SelectItem>
+                  <SelectItem value="Builder Floor">Builder Floor</SelectItem>
+                  <SelectItem value="Farm House">Farm House</SelectItem>
+                  <SelectItem value="Plot">Plot</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="numberOfBedrooms">Bedrooms</Label>
                 <Input
                   id="numberOfBedrooms"
                   name="numberOfBedrooms"
-                  type="number"
+                  type="text"
                   defaultValue={selectedProperty?.numberOfBedrooms || 0}
                   disabled={formMode === "view"}
                   required
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="numberOfBathrooms">Bathrooms</Label>
                 <Input
                   id="numberOfBathrooms"
@@ -923,7 +986,7 @@ export default function ResidentialProperties() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="numberOfBalconies">Balconies</Label>
                 <Input
                   id="numberOfBalconies"
@@ -936,7 +999,7 @@ export default function ResidentialProperties() {
               </div>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="carpetArea">Carpet Area (sq ft)</Label>
               <Input
                 id="carpetArea"
@@ -948,7 +1011,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="plotArea">Plot Area (sq ft)</Label>
               <Input
                 id="plotArea"
@@ -960,7 +1023,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="plotDimensions">Plot Dimensions</Label>
               <Input
                 id="plotDimensions"
@@ -970,7 +1033,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="widthFacingRoad">Width Facing Road</Label>
               <Input
                 id="widthFacingRoad"
@@ -981,49 +1044,70 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="facing">Facing</Label>
-              <Input
-                id="facing"
-                name="facing"
-                defaultValue={selectedProperty?.facing || ""}
+              <Select
+                value={formData.facing}
+                onValueChange={(value) => setFormData({ ...formData, facing: value })}
                 disabled={formMode === "view"}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select facing direction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="North">North</SelectItem>
+                  <SelectItem value="South">South</SelectItem>
+                  <SelectItem value="East">East</SelectItem>
+                  <SelectItem value="West">West</SelectItem>
+                  <SelectItem value="North-East">North-East</SelectItem>
+                  <SelectItem value="North-West">North-West</SelectItem>
+                  <SelectItem value="South-East">South-East</SelectItem>
+                  <SelectItem value="South-West">South-West</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="totalFloors">Total Floors</Label>
               <Input
                 id="totalFloors"
                 name="totalFloors"
-                type="number"
+                type="text"
                 defaultValue={selectedProperty?.totalFloors || 0}
                 disabled={formMode === "view"}
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Input
-                id="status"
-                name="status"
-                defaultValue={selectedProperty?.status || ""}
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
                 disabled={formMode === "view"}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ready to move">Ready to move</SelectItem>
+                  <SelectItem value="Under construction">Under construction</SelectItem>
+                  <SelectItem value="New launch">New launch</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="ageOfProperty">Age of Property (years)</Label>
               <Input
                 id="ageOfProperty"
                 name="ageOfProperty"
-                type="number"
+                type="text"
                 defaultValue={selectedProperty?.ageOfProperty || 0}
                 disabled={formMode === "view"}
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="totalPrice">Total Price</Label>
               <Input
                 id="totalPrice"
@@ -1035,7 +1119,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="pricePerUnit">Price per Unit</Label>
               <Input
                 id="pricePerUnit"
@@ -1046,7 +1130,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="otherRooms">Other Rooms</Label>
               <Input
                 id="otherRooms"
@@ -1056,27 +1140,42 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="furnishing">Furnishing</Label>
-              <Input
-                id="furnishing"
-                name="furnishing"
-                defaultValue={selectedProperty?.furnishing || ""}
+              <Select
+                value={formData.furnishing}
+                onValueChange={(value) => setFormData({ ...formData, furnishing: value })}
                 disabled={formMode === "view"}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select furnishing type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semi-furnished">semi-furnished</SelectItem>
+                  <SelectItem value="fully furnished">fully furnished</SelectItem>
+                  <SelectItem value="unfurnished">unfurnished</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="parking">Parking</Label>
-              <Input
-                id="parking"
-                name="parking"
-                defaultValue={selectedProperty?.parking || ""}
+              <Select
+                value={formData.parking}
+                onValueChange={(value) => setFormData({ ...formData, parking: value })}
                 disabled={formMode === "view"}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select parking availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Available">Available</SelectItem>
+                  <SelectItem value="Not Available">Not Available</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="amenities">Amenities</Label>
               <Input
                 id="amenities"
@@ -1086,7 +1185,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="locationAdvantage">Location Advantage</Label>
               <Input
                 id="locationAdvantage"
@@ -1096,7 +1195,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="rentalIncome">Rental Income</Label>
               <Input
                 id="rentalIncome"
@@ -1107,7 +1206,7 @@ export default function ResidentialProperties() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="createdAt">Created At</Label>
               <Input
                 id="createdAt"
